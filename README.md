@@ -1,161 +1,163 @@
-# StayBooking
+# 🏡 StayBooking
 
-StayBooking is a backend service for a short-term stay / rental booking platform (think Airbnb). Hosts publish listings with photos and a location; guests search for nearby places within a given radius and book them for a date range.
+**你的下一个"爱彼迎"，从后端开始。** StayBooking 是一个短租预订平台的后端服务——房东发布带照片和定位的房源，房客在附近搜索心仪的住处、圈定入住日期，然后一键下单。
 
-The service is built with **Spring Boot 4**, **Java 21**, **PostgreSQL + PostGIS**, and **JWT-based authentication**.
+想象一下：把"树屋民宿"、"海景别墅"、"山间小筑"统统装进数据库，让它们在正确的时间、正确的距离内，自动匹配给正在找房子的人。这就是 StayBooking 干的事。
 
----
-
-## Features
-
-- **Authentication & authorization** — register and log in with JWT. Two roles: `ROLE_HOST` and `ROLE_GUEST`.
-- **Listing management** — hosts create, list, and delete their own listings.
-- **Image storage** — listing photos are uploaded to Google Cloud Storage.
-- **Geocoding** — a street address is converted to a latitude/longitude via the Google Maps Geocoding API.
-- **Location-based search** — guests search by center point + radius (in meters), check-in/check-out dates, and guest count using PostGIS geospatial queries. Results automatically exclude listings that already have overlapping bookings.
-- **Booking management** — guests create/list/delete their bookings; hosts view bookings for their listings. Overlapping-booking conflicts are rejected.
+基于 **Spring Boot 4** + **Java 21** + **PostgreSQL / PostGIS** + **JWT 认证** 打造。
 
 ---
 
-## Tech Stack
+## ✨ 能做什么
 
-| Area            | Technology                                                              |
-| --------------- | ----------------------------------------------------------------------- |
-| Language        | Java 21                                                                 |
-| Framework       | Spring Boot 4.1.0 (Web MVC, Data JPA, Security)                         |
-| Build           | Gradle                                                                  |
-| Database        | PostgreSQL + PostGIS (geospatial extension)                             |
-| ORM / Spatial   | Hibernate ORM + Hibernate Spatial + JTS                                |
-| Auth            | Spring Security + JJWT (JWT)                                            |
-| Storage         | Google Cloud Storage                                                    |
-| Geocoding       | Google Maps Services (Geocoding API)                                    |
+- 🔐 **注册登录一把梭** —— JWT 无状态认证，两大角色各司其职：`ROLE_HOST`（房东）和 `ROLE_GUEST`（房客）。
+- 🏠 **房源随心管理** —— 房东创建、查看、删除自己的房源，全程掌握在自己的手心里。
+- 🖼️ **照片上云** —— 房源图片直传 Google Cloud Storage，UUID 命名、公开可读。
+- 📍 **地址变坐标** —— 输入一个街道地址，Google Maps Geocoding 帮你算出经纬度。
+- 🔎 **附近搜房** —— 房客以中心点 + 半径（米）划一个圈，配合入住/退房日期和入住人数，用 PostGIS 空间查询精准搜房。**已经撞档的房源会自动隐身**，绝不让你白跑一趟。
+- 📅 **预订无忧** —— 房客下单、取消、查看自己的行程；房东查看名下房源的预订。**日期冲突直接拒绝**，避免"一间房租给两个人"的尴尬。
 
 ---
 
-## Prerequisites
+## 🧰 技术栈
+
+| 模块       | 技术                                                               |
+| ---------- | ------------------------------------------------------------------ |
+| 语言       | Java 21                                                            |
+| 框架       | Spring Boot 4.1.0（Web MVC / Data JPA / Security）                 |
+| 构建       | Gradle                                                             |
+| 数据库     | PostgreSQL + PostGIS（地理空间扩展）                               |
+| ORM / 空间 | Hibernate ORM + Hibernate Spatial + JTS                            |
+| 认证       | Spring Security + JJWT（JWT）                                      |
+| 存储       | Google Cloud Storage                                               |
+| 地理编码   | Google Maps Services（Geocoding API）                              |
+
+---
+
+## 🧩 准备工作
 
 - JDK 21
-- Docker & Docker Compose (for the local PostGIS database)
-- A Google Cloud Platform project with:
-  - A Cloud Storage bucket (for listing images)
-  - A service account key file (`credentials.json`)
-  - A Geocoding API key
+- Docker 与 Docker Compose（本地跑 PostGIS 数据库用）
+- 一个 Google Cloud Platform 项目，包含：
+  - 一个 Cloud Storage 存储桶（存房源图片）
+  - 一个服务账号密钥文件（`credentials.json`）
+  - 一个 Geocoding API Key
 
 ---
 
-## Getting Started
+## 🚀 快速上手
 
-### 1. Start the database
+### 1. 拉起数据库
 
-A PostGIS-enabled PostgreSQL container is provided via Docker Compose:
+一条命令，PostGIS 版的 PostgreSQL 就位：
 
 ```bash
 docker compose up -d
 ```
 
-This starts PostgreSQL on `localhost:5432` with database `postgres` and password `secret`.
+数据库跑在 `localhost:5432`，库名 `postgres`，密码 `secret`。
 
-### 2. Configure secrets
+### 2. 配置密钥
 
-The application reads its external configuration from environment variables. Set the following:
+应用通过环境变量读取外部配置，逐个填好：
 
-| Variable             | Description                                          |
-| -------------------- | ---------------------------------------------------- |
-| `DATABASE_URL`       | Database host (default `localhost`)                  |
-| `DATABASE_PORT`      | Database port (default `5432`)                       |
-| `DATABASE_USERNAME`  | Database user (default `postgres`)                   |
-| `DATABASE_PASSWORD`  | Database password (default `secret`)                 |
-| `GCS_BUCKET`         | Google Cloud Storage bucket name for listing images  |
-| `GEOCODING_KEY`      | Google Maps Geocoding API key                        |
-| `JWT_SECRET_KEY`     | Secret key used to sign JWTs                         |
+| 变量                 | 说明                                |
+| -------------------- | ----------------------------------- |
+| `DATABASE_URL`       | 数据库主机（默认 `localhost`）      |
+| `DATABASE_PORT`      | 数据库端口（默认 `5432`）           |
+| `DATABASE_USERNAME`  | 数据库用户（默认 `postgres`）       |
+| `DATABASE_PASSWORD`  | 数据库密码（默认 `secret`）         |
+| `GCS_BUCKET`         | 存储房源图片的 GCS 存储桶名称       |
+| `GEOCODING_KEY`      | Google Maps Geocoding API Key       |
+| `JWT_SECRET_KEY`     | 签发 JWT 的密钥                     |
 
-Additionally, place your GCP service account key at:
+另外，把 GCP 服务账号密钥放到：
 
 ```
 src/main/resources/credentials.json
 ```
 
-### 3. Run the application
+### 3. 启动服务
 
 ```bash
 ./gradlew bootRun
 ```
 
-The service starts on `http://localhost:8080`.
+服务在 `http://localhost:8080` 苏醒。
 
-> **Note:** On startup, `DevRunner` seeds the database with sample users, listings, and bookings. JPA is configured with `ddl-auto: create-drop`, so schema and data are recreated on every restart (suitable for development only).
-
----
-
-## API Overview
-
-All endpoints (except authentication) require a `Bearer` token in the `Authorization` header.
-
-### Authentication
-
-| Method | Endpoint         | Role   | Description             |
-| ------ | ---------------- | ------ | ----------------------- |
-| POST   | `/auth/register` | Public | Register a new user     |
-| POST   | `/auth/login`    | Public | Log in, returns a JWT   |
-
-### Listings (host)
-
-| Method | Endpoint                        | Role       | Description                          |
-| ------ | ------------------------------- | ---------- | ------------------------------------ |
-| GET    | `/listings`                     | `ROLE_HOST` | List the host's own listings         |
-| POST   | `/listings`                     | `ROLE_HOST` | Create a listing (multipart form)    |
-| DELETE | `/listings/{listingId}`         | `ROLE_HOST` | Delete a listing                     |
-| GET    | `/listings/{listingId}/bookings`| `ROLE_HOST` | List bookings for a listing          |
-
-### Search (guest)
-
-| Method | Endpoint          | Role        | Description                            |
-| ------ | ----------------- | ----------- | -------------------------------------- |
-| GET    | `/listings/search`| `ROLE_GUEST` | Search listings by location and dates  |
-
-Query parameters: `lat`, `lon`, `checkin_date`, `checkout_date`, `guest_number`, and optional `distance` (meters, defaults to `500000`).
-
-### Bookings (guest)
-
-| Method | Endpoint             | Role        | Description                    |
-| ------ | -------------------- | ----------- | ------------------------------ |
-| GET    | `/bookings`          | `ROLE_GUEST` | List the guest's bookings      |
-| POST   | `/bookings`          | `ROLE_GUEST` | Create a booking               |
-| DELETE | `/bookings/{bookingId}` | `ROLE_GUEST` | Cancel a booking               |
+> 💡 **小提示：** 启动时 `DevRunner` 会自动灌入一批示例用户、房源和预订，开箱即玩。JPA 配置为 `ddl-auto: create-drop`，每次重启都会重建表结构（仅限开发环境）。
 
 ---
 
-## Project Structure
+## 📡 API 一览
+
+除认证接口外，所有请求都要在 `Authorization` 头里带上 `Bearer` Token。
+
+### 认证
+
+| 方法 | 接口             | 权限   | 说明                 |
+| ---- | ---------------- | ------ | -------------------- |
+| POST | `/auth/register` | 公开   | 注册新用户           |
+| POST | `/auth/login`    | 公开   | 登录，返回 JWT       |
+
+### 房源（房东）
+
+| 方法   | 接口                             | 权限        | 说明                        |
+| ------ | -------------------------------- | ----------- | --------------------------- |
+| GET    | `/listings`                      | `ROLE_HOST` | 查看房东自己的房源          |
+| POST   | `/listings`                      | `ROLE_HOST` | 创建房源（multipart 表单）  |
+| DELETE | `/listings/{listingId}`          | `ROLE_HOST` | 删除房源                    |
+| GET    | `/listings/{listingId}/bookings` | `ROLE_HOST` | 查看某房源的预订            |
+
+### 搜索（房客）
+
+| 方法 | 接口               | 权限         | 说明                       |
+| ---- | ------------------ | ------------ | -------------------------- |
+| GET  | `/listings/search` | `ROLE_GUEST` | 按位置和日期搜索房源       |
+
+查询参数：`lat`、`lon`、`checkin_date`、`checkout_date`、`guest_number`，以及可选的 `distance`（米，默认 `500000`）。
+
+### 预订（房客）
+
+| 方法   | 接口                       | 权限         | 说明               |
+| ------ | -------------------------- | ------------ | ------------------ |
+| GET    | `/bookings`                | `ROLE_GUEST` | 查看房客的预订     |
+| POST   | `/bookings`                | `ROLE_GUEST` | 创建预订           |
+| DELETE | `/bookings/{bookingId}`    | `ROLE_GUEST` | 取消预订           |
+
+---
+
+## 🗂️ 项目结构
 
 ```
 src/main/java/com/laioffer/staybooking/
-├── authentication/   # Register / login service & controller
-├── booking/          # Booking service, controller, exceptions
-├── listing/          # Listing service, controller, exceptions
-├── location/         # Geocoding (address → lat/lng)
-├── model/            # JPA entities, DTOs, request/response records
-├── repository/       # Spring Data JPA repositories
-├── security/         # JWT filter, handler, UserDetailsService
-├── storage/          # Google Cloud Storage image upload
-├── AppConfig.java    # Security chain, beans, GCS/geocoding config
-├── DevRunner.java    # Seeds sample data on startup
+├── authentication/   # 注册 / 登录服务与控制器
+├── booking/          # 预订服务、控制器、异常
+├── listing/          # 房源服务、控制器、异常
+├── location/         # 地理编码（地址 → 经纬度）
+├── model/            # JPA 实体、DTO、请求/响应记录
+├── repository/       # Spring Data JPA 仓库
+├── security/         # JWT 过滤器、处理器、UserDetailsService
+├── storage/          # Google Cloud Storage 图片上传
+├── AppConfig.java    # 安全链、Bean、GCS/地理编码配置
+├── DevRunner.java    # 启动时灌入示例数据
 └── StaybookingApplication.java
 ```
 
 ---
 
-## Configuration Reference
+## ⚙️ 配置速查
 
-Key settings live in `src/main/resources/application.yaml`:
+核心配置在 `src/main/resources/application.yaml`：
 
-- `spring.datasource.*` — PostgreSQL connection (driven by environment variables).
-- `spring.jpa.hibernate.ddl-auto: create-drop` — recreate schema on each run (dev only).
-- `spring.servlet.multipart.max-file-size: 10MB` — image upload limit.
-- `spring.sql.init.schema-locations: postgis_extension.sql` — enables the PostGIS extension at startup.
+- `spring.datasource.*` —— PostgreSQL 连接（由环境变量驱动）。
+- `spring.jpa.hibernate.ddl-auto: create-drop` —— 每次运行重建表结构（仅开发）。
+- `spring.servlet.multipart.max-file-size: 10MB` —— 图片上传上限。
+- `spring.sql.init.schema-locations: postgis_extension.sql` —— 启动时启用 PostGIS 扩展。
 
 ---
 
-## Tests
+## 🧪 测试
 
 ```bash
 ./gradlew test
@@ -163,6 +165,6 @@ Key settings live in `src/main/resources/application.yaml`:
 
 ---
 
-## License
+## 📄 License
 
-This project is provided for educational purposes.
+本项目仅用于学习目的。
